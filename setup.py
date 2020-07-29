@@ -15,29 +15,21 @@ def scm_version():
 
 
 setup(
-    name="lambdasoc",
+    name="systemonachip",
     use_scm_version=scm_version(),
-    author="Jean-François Nguyen",
-    author_email="jf@lambdaconcept.com",
-    description="A framework for building SoCs with nMigen",
+    author="Scott Shawcroft",
+    author_email="scott@chickadee.tech",
+    description="A framework for building system-on-a-chips with nMigen",
     #long_description="""TODO""",
     license="BSD",
     setup_requires=["setuptools_scm"],
     install_requires=[
         "nmigen>=0.1,<0.3",
     ],
-    entry_points={
-        "console_scripts": [
-            "flterm=lambdasoc.tools.flterm:main [SFL]",
-        ]
-    },
-    extras_require={
-        "SFL": ["asyncserial"]
-    },
     packages=find_packages(),
     include_package_data=True,
     project_urls={
-        "Source Code": "https://github.com/lambdaconcept/lambdasoc",
-        "Bug Tracker": "https://github.com/lambdaconcept/lambdasoc/issues",
+        "Source Code": "https://github.com/tannewt/systemonachip",
+        "Bug Tracker": "https://github.com/tannwet/systemonachip/issues",
     },
 )

@@ -23,29 +23,26 @@ class Peripheral:
     The ``Peripheral`` class is not meant to be instantiated as-is, but rather as a base class for
     actual peripherals.
 
-    Usage example
-    -------------
+    .. code-block:: python
 
-    ```
-    class ExamplePeripheral(Peripheral, Elaboratable):
-        def __init__(self):
-            super().__init__()
-            bank         = self.csr_bank()
-            self._foo    = bank.csr(8, "r")
-            self._bar    = bank.csr(8, "w")
+        class ExamplePeripheral(Peripheral, Elaboratable):
+            def __init__(self):
+                super().__init__()
+                bank         = self.csr_bank()
+                self._foo    = bank.csr(8, "r")
+                self._bar    = bank.csr(8, "w")
 
-            self._rdy    = self.event(mode="rise")
+                self._rdy    = self.event(mode="rise")
 
-            self._bridge = self.bridge(data_width=32, granularity=8, alignment=2)
-            self.bus     = self._bridge.bus
-            self.irq     = self._bridge.irq
+                self._bridge = self.bridge(data_width=32, granularity=8, alignment=2)
+                self.bus     = self._bridge.bus
+                self.irq     = self._bridge.irq
 
-        def elaborate(self, platform):
-            m = Module()
-            m.submodules.bridge = self._bridge
-            # ...
-            return m
-    ```
+            def elaborate(self, platform):
+                m = Module()
+                m.submodules.bridge = self._bridge
+                # ...
+                return m
 
     Arguments
     ---------
@@ -74,13 +71,14 @@ class Peripheral:
     def bus(self):
         """Wishbone bus interface.
 
-        Return value
+        Returns
         ------------
         An instance of :class:`Interface`.
 
-        Exceptions
+        Raises
         ----------
-        Raises :exn:`NotImplementedError` if the peripheral does not have a Wishbone bus.
+        NotImplementedError
+            If the peripheral does not have a Wishbone bus.
         """
         if self._bus is None:
             raise NotImplementedError("Peripheral {!r} does not have a bus interface"
@@ -98,13 +96,14 @@ class Peripheral:
     def irq(self):
         """Interrupt request line.
 
-        Return value
-        ------------
+        Returns
+        -------
         An instance of :class:`IRQLine`.
 
-        Exceptions
+        Raises
         ----------
-        Raises :exn:`NotImplementedError` if the peripheral does not have an IRQ line.
+        NotImplementedError
+            If the peripheral does not have an IRQ line.
         """
         if self._irq is None:
             raise NotImplementedError("Peripheral {!r} does not have an IRQ line"
@@ -131,7 +130,7 @@ class Peripheral:
             Alignment of the bank. If not specified, the bridge alignment is used.
             See :class:`nmigen_soc.csr.Multiplexer` for details.
 
-        Return value
+        Returns
         ------------
         An instance of :class:`CSRBank`.
         """
@@ -145,7 +144,7 @@ class Peripheral:
 
         See :meth:`nmigen_soc.wishbone.Decoder.add` for details.
 
-        Return value
+        Returns
         ------------
         An instance of :class:`nmigen_soc.wishbone.Interface`.
         """
@@ -162,7 +161,7 @@ class Peripheral:
 
         See :class:`EventSource` for details.
 
-        Return value
+        Returns
         ------------
         An instance of :class:`EventSource`.
         """
@@ -175,7 +174,7 @@ class Peripheral:
 
         See :class:`PeripheralBridge` for details.
 
-        Return value
+        Returns
         ------------
         A :class:`PeripheralBridge` providing access to local resources.
         """
@@ -185,7 +184,7 @@ class Peripheral:
     def iter_csr_banks(self):
         """Iterate requested CSR banks and their parameters.
 
-        Yield values
+        Yields
         ------------
         A tuple ``bank, addr, alignment`` describing the bank and its parameters.
         """
@@ -195,7 +194,7 @@ class Peripheral:
     def iter_windows(self):
         """Iterate requested windows and their parameters.
 
-        Yield values
+        Yields
         ------------
         A tuple ``window, addr, sparse`` descr
         given to :meth:`Peripheral.window`.
@@ -206,7 +205,7 @@ class Peripheral:
     def iter_events(self):
         """Iterate requested event sources.
 
-        Yield values
+        Yields
         ------------
         An instance of :class:`EventSource`.
         """
@@ -230,23 +229,16 @@ class CSRBank:
             src_loc_at=0):
         """Request a CSR register.
 
-        Parameters
-        ----------
-        width : int
-            Width of the register. See :class:`nmigen_soc.csr.Element`.
-        access : :class:`Access`
-            Register access mode. See :class:`nmigen_soc.csr.Element`.
-        addr : int
-            Address of the register. See :meth:`nmigen_soc.csr.Multiplexer.add`.
-        alignment : int
-            Register alignment. See :class:`nmigen_soc.csr.Multiplexer`.
-        name : str
-            Name of the register. If ``None`` (default) the name is inferred from the variable
-            name this register is assigned to.
+        Parameters:
+            width (int): Width of the register. See :class:`nmigen_soc.csr.Element`.
+            access (Access): Register access mode. See :class:`nmigen_soc.csr.Element`.
+            addr (int): Address of the register. See :meth:`nmigen_soc.csr.Multiplexer.add`.
+            alignment (int): Register alignment. See :class:`nmigen_soc.csr.Multiplexer`.
+            name (str): Name of the register. If ``None`` (default) the name is inferred from the variable
+                name this register is assigned to.
 
-        Return value
-        ------------
-        An instance of :class:`nmigen_soc.csr.Element`.
+        Returns:
+            An instance of :class:`nmigen_soc.csr.Element`.
         """
         if name is not None and not isinstance(name, str):
             raise TypeError("Name must be a string, not {!r}".format(name))
@@ -262,7 +254,7 @@ class CSRBank:
     def iter_csr_regs(self):
         """Iterate requested CSR registers and their parameters.
 
-        Yield values
+        Yields
         ------------
         A tuple ``elem, addr, alignment`` describing the register and its parameters.
         """
@@ -279,7 +271,7 @@ class PeripheralBridge(Elaboratable):
     Event managment is performed by an :class:`InterruptSource` submodule.
 
     Parameters
-    ---------
+    ----------
     periph : :class:`Peripheral`
         The peripheral whose resources are exposed by this bridge.
     data_width : int

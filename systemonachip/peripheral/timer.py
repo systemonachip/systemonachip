@@ -3,27 +3,25 @@ from nmigen import *
 from . import Peripheral
 
 
-__all__ = ["TimerPeripheral"]
+__all__ = ["Timer"]
 
 
-class TimerPeripheral(Peripheral, Elaboratable):
+class Timer(Peripheral, Elaboratable):
     """Timer peripheral.
 
     A general purpose down-counting timer peripheral.
 
-    CSR registers
-    -------------
     reload : read/write
-        Reload value of counter. When `ctr` reaches 0, it is automatically reloaded with this value.
+    Reload value of counter. When `ctr` reaches 0, it is automatically reloaded with this value.
+    
     en : read/write
-        Counter enable.
+    Counter enable.
+    
     ctr : read/write
-        Counter value.
+    Counter value.
 
-    Events
-    ------
     zero : edge-triggered (rising)
-        Counter value reached 0.
+    Counter value reached 0.
 
     Parameters
     ----------

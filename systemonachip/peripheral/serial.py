@@ -1,42 +1,40 @@
 from nmigen import *
 from nmigen.lib.fifo import SyncFIFO
 
-from nmigen_stdio.serial import AsyncSerial
+import nmigen_stdio.serial
 
 from . import Peripheral
 
 
-__all__ = ["AsyncSerialPeripheral"]
+__all__ = ["AsyncSerial"]
 
 
-class AsyncSerialPeripheral(Peripheral, Elaboratable):
+class AsyncSerial(Peripheral, Elaboratable):
     """Asynchronous serial transceiver peripheral.
 
     See :class:`nmigen_stdio.serial.AsyncSerial` for details.
 
     CSR registers
-    -------------
     divisor : read/write
-        Clock divisor.
+    Clock divisor.
     rx_data : read-only
-        Receiver data.
+    Receiver data.
     rx_rdy : read-only
-        Receiver ready. The receiver FIFO is non-empty.
+    Receiver ready. The receiver FIFO is non-empty.
     rx_err : read-only
-        Receiver error flags. See :class:`nmigen_stdio.serial.AsyncSerialRX` for layout.
+    Receiver error flags. See :class:`nmigen_stdio.serial.AsyncSerialRX` for layout.
     tx_data : write-only
-        Transmitter data.
+    Transmitter data.
     tx_rdy : read-only
-        Transmitter ready. The transmitter FIFO is non-full.
+    Transmitter ready. The transmitter FIFO is non-full.
 
     Events
-    ------
     rx_rdy : level-triggered
-        Receiver ready. The receiver FIFO is non-empty.
+    Receiver ready. The receiver FIFO is non-empty.
     rx_err : edge-triggered (rising)
-        Receiver error. Error cause is available in the ``rx_err`` register.
+    Receiver error. Error cause is available in the ``rx_err`` register.
     tx_mty : edge-triggered (rising)
-        Transmitter empty. The transmitter FIFO is empty.
+    Transmitter empty. The transmitter FIFO is empty.
 
     Parameters
     ----------
@@ -65,7 +63,7 @@ class AsyncSerialPeripheral(Peripheral, Elaboratable):
     def __init__(self, *, rx_depth=16, tx_depth=16, **kwargs):
         super().__init__()
 
-        self._phy       = AsyncSerial(**kwargs)
+        self._phy       = nmigen_stdio.serial.AsyncSerial(**kwargs)
         self._rx_fifo   = SyncFIFO(width=self._phy.rx.data.width, depth=rx_depth)
         self._tx_fifo   = SyncFIFO(width=self._phy.tx.data.width, depth=tx_depth)
 

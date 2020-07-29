@@ -1,9 +1,9 @@
 from .base import *
 from ..cpu import CPU
-from ..periph.intc import InterruptController
-from ..periph.sram import SRAMPeripheral
-from ..periph.serial import AsyncSerialPeripheral
-from ..periph.timer import TimerPeripheral
+from ..peripheral.interrupt import InterruptController
+from ..peripheral.memory import RandomAccessMemory
+from ..peripheral.serial import AsyncSerial
+from ..peripheral.timer import Timer
 
 
 __all__ = ["CPUSoC", "BIOSBuilder"]
@@ -12,10 +12,9 @@ __all__ = ["CPUSoC", "BIOSBuilder"]
 class CPUSoC(SoC):
     cpu    = socproperty(CPU)
     intc   = socproperty(InterruptController)
-    rom    = socproperty(SRAMPeripheral)
-    ram    = socproperty(SRAMPeripheral) # TODO: abstract class for storage peripherals.
-    uart   = socproperty(AsyncSerialPeripheral)
-    timer  = socproperty(TimerPeripheral)
+    rom    = socproperty(RandomAccessMemory)
+    ram    = socproperty(RandomAccessMemory) # TODO: abstract class for storage peripherals.
+    timer  = socproperty(Timer)
 
     # TODO: implement a CRG peripheral and expose clock frequencies through CSRs.
     clk_freq = socproperty(int)
@@ -33,11 +32,11 @@ class CPUSoC(SoC):
         if not do_init:
             return products
 
-        with products.extract("bios.bin") as bios_filename:
-            with open(bios_filename, "rb") as f:
-                words = iter(lambda: f.read(self.cpu.data_width // 8), b'')
-                bios  = [int.from_bytes(w, self.cpu.byteorder) for w in words]
-        self.rom.init = bios
+        # with products.extract("bios.bin") as bios_filename:
+        #     with open(bios_filename, "rb") as f:
+        #         words = iter(lambda: f.read(self.cpu.data_width // 8), b'')
+        #         bios  = [int.from_bytes(w, self.cpu.byteorder) for w in words]
+        self.rom.init = bytearray(400)
 
 
 class BIOSBuilder(ConfigBuilder):
@@ -58,10 +57,6 @@ class BIOSBuilder(ConfigBuilder):
             CONFIG_ROM_SIZE={{hex(soc.rom.size)}}
             CONFIG_RAM_START={{hex(periph_addr(soc.ram))}}
             CONFIG_RAM_SIZE={{hex(soc.ram.size)}}
-            CONFIG_UART_START={{hex(periph_addr(soc.uart))}}
-            CONFIG_UART_IRQNO={{soc.intc.find_index(soc.uart.irq)}}
-            CONFIG_UART_RX_RINGBUF_SIZE_LOG2=7
-            CONFIG_UART_TX_RINGBUF_SIZE_LOG2=7
             CONFIG_TIMER_START={{hex(periph_addr(soc.timer))}}
             CONFIG_TIMER_IRQNO={{soc.intc.find_index(soc.timer.irq)}}
             CONFIG_TIMER_CTR_WIDTH={{soc.timer.width}}
@@ -70,11 +65,6 @@ class BIOSBuilder(ConfigBuilder):
     }
     command_templates = [
         *ConfigBuilder.command_templates,
-        r"""
-            build={{build_dir}}
-            KCONFIG_CONFIG={{build_dir}}/{{name}}.config
-            make -C {{software_dir}}/bios 1>&2
-        """,
     ]
 
     def prepare(self, soc, build_dir, name):

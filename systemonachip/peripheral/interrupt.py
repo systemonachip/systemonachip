@@ -21,10 +21,12 @@ class InterruptController(Peripheral):
             IRQ line.
         index : int
             IRQ index.
-
-        Exceptions
+        
+        
+        Raises
         ----------
-        Raises :exn:`ValueError` if ``line`` is added twice, or if ``index`` is already used.
+        ValueError
+            If ``line`` is added twice, or if ``index`` is already used.
         """
         if not isinstance(line, IRQLine):
             raise TypeError("IRQ line must be an instance of IRQLine, not {!r}"
@@ -44,8 +46,8 @@ class InterruptController(Peripheral):
     def iter_irqs(self):
         """Iterate IRQ lines.
 
-        Yield values
-        ------------
+        Yields
+        ------
         A tuple ``index, line`` describing an IRQ line and its index.
         """
         yield from sorted(self.__irq_map.items())
@@ -58,13 +60,16 @@ class InterruptController(Peripheral):
         line : :class:`IRQLine`
             IRQ line.
 
-        Return value
+
+        Returns
         ------------
         The index at which ``line`` is mapped, if present.
 
-        Exceptions
+        Raises
         ----------
-        Raises :exn:`KeyError` if ``line`` is not present.
+        KeyError
+            If ``line`` is not present.
+
         """
         for irq_index, irq_line in self.iter_irqs():
             if line is irq_line:

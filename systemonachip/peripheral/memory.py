@@ -7,10 +7,10 @@ from nmigen_soc.memory import MemoryMap
 from . import Peripheral
 
 
-__all__ = ["SRAMPeripheral"]
+__all__ = ["RandomAccessMemory"]
 
 
-class SRAMPeripheral(Peripheral, Elaboratable):
+class RandomAccessMemory(Peripheral, Elaboratable):
     """SRAM storage peripheral.
 
     Parameters
