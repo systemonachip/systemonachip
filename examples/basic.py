@@ -20,26 +20,27 @@ class Basic(CPUSoC, Elaboratable):
         self._arbiter = wishbone.Arbiter(addr_width=30, data_width=32, granularity=8,
                                          features={"cti", "bte"})
         self._decoder = wishbone.Decoder(addr_width=30, data_width=32, granularity=8,
-                                         features={"cti", "bte"})
+                                         features={"cti", "bte"}) # Every 0x10000000
+        """Memory decoder that splits the 32-bit address space into 16 0x10000000 byte chunks. Each
+           chunk can be passed into a sub-bus or peripheral."""
 
-        self.cpu = MinervaCPU(reset_address=0x00000000)
-        self._arbiter.add(self.cpu.ibus)
-        self._arbiter.add(self.cpu.dbus)
+        self.cpu = MinervaCPU(reset_address=0x00000000, instruction_bus=self._arbiter, data_bus=self._arbiter)
+        """Central processing unit."""
 
-        self.rom = RandomAccessMemory(size=rom_size, writable=False)
-        self._decoder.add(self.rom.bus, addr=0x00000000)
+        self.rom = RandomAccessMemory(self._decoder[0x0], size=rom_size, writable=False)
+        """Core read-only memory. At 0x00000000."""
 
-        self.ram = RandomAccessMemory(size=ram_size)
-        self._decoder.add(self.ram.bus, addr=0x20000000)
+        self.ram = RandomAccessMemory(self._decoder[0x2], size=ram_size)
+        """Single random access memory. At 0x20000000."""
 
-        # self.uart = AsyncSerial(divisor=uart_divisor, pins=uart_pins)
-        # self._decoder.add(self.uart.bus, addr=uart_addr)
+        # self.uart = AsyncSerial(self._decoder[0x3], divisor=uart_divisor, pins=uart_pins)
+        """Simple async serial. At 0x30000000."""
 
-        self.timer = Timer(width=32)
-        self._decoder.add(self.timer.bus, addr=0x40000000)
+        self.timer = Timer(self._decoder[0x4], width=32)
+        """Simple 32-bit timer. At 0x40000000."""
 
-        self.intc = GenericInterruptController(width=len(self.cpu.ip))
-        self.intc.add_irq(self.timer.irq, 0)
+        # self.intc = GenericInterruptController(width=len(self.cpu.ip))
+        # self.intc.add_irq(self.timer.irq, 0)
         # self.intc.add_irq(self.uart .irq, 1)
 
         self.memory_map = self._decoder.bus.memory_map

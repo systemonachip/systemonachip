@@ -30,7 +30,7 @@ class RandomAccessMemory(Peripheral, Elaboratable):
         Wishbone bus interface.
     """
     # TODO raise bus.err if read-only and a bus write is attempted.
-    def __init__(self, *, size, data_width=32, granularity=8, writable=True):
+    def __init__(self, *, address_window, size, data_width=32, granularity=8, writable=True):
         super().__init__()
 
         if not isinstance(size, int) or size <= 0 or size & size-1:
