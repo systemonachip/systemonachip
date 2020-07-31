@@ -2,6 +2,9 @@ from nmigen import *
 
 from . import Peripheral
 
+from ..event import *
+from ..register import *
+
 
 __all__ = ["Timer"]
 
@@ -63,7 +66,7 @@ class Timer(Peripheral, Elaboratable):
 
         self._bridge  = self.bridge(data_width=32, granularity=8, alignment=2)
         self.bus      = self._bridge.bus
-        self.irq      = self._bridge.irq
+        #self.irq      = self._bridge.irq
 
     def elaborate(self, platform):
         m = Module()

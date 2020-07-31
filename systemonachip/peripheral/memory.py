@@ -4,13 +4,12 @@ from nmigen.utils import log2_int
 from nmigen_soc import wishbone
 from nmigen_soc.memory import MemoryMap
 
-from . import Peripheral
-
+from nmigen import tracer
 
 __all__ = ["RandomAccessMemory"]
 
 
-class RandomAccessMemory(Peripheral, Elaboratable):
+class RandomAccessMemory(Elaboratable):
     """SRAM storage peripheral.
 
     Parameters
@@ -30,8 +29,11 @@ class RandomAccessMemory(Peripheral, Elaboratable):
         Wishbone bus interface.
     """
     # TODO raise bus.err if read-only and a bus write is attempted.
-    def __init__(self, *, address_window, size, data_width=32, granularity=8, writable=True):
+    def __init__(self, address_window, *, size, name=None, src_loc_at=1, data_width=32, granularity=8, writable=True):
         super().__init__()
+        if name is not None and not isinstance(name, str):
+            raise TypeError("Name must be a string, not {!r}".format(name))
+        self.name = name or tracer.get_var_name(depth=2 + src_loc_at).lstrip("_")
 
         if not isinstance(size, int) or size <= 0 or size & size-1:
             raise ValueError("Size must be an integer power of two, not {!r}"
@@ -48,9 +50,10 @@ class RandomAccessMemory(Peripheral, Elaboratable):
                                       data_width=self._mem.width, granularity=granularity,
                                       features={"cti", "bte"})
 
-        map = MemoryMap(addr_width=log2_int(size), data_width=granularity)
-        map.add_resource(self._mem, size=size)
-        self.bus.memory_map = map
+        memory_map = MemoryMap(addr_width=log2_int(size), data_width=granularity)
+        memory_map.add_resource(self._mem, size=size)
+        self.bus.memory_map = memory_map
+        address_window.add(self.bus)
 
         self.size        = size
         self.granularity = granularity

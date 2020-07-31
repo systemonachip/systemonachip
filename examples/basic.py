@@ -4,6 +4,7 @@ import importlib
 from nmigen import *
 from nmigen_soc import wishbone
 
+from systemonachip.bus.decoder import Decoder
 from systemonachip.cpu.minerva import MinervaCPU
 from systemonachip.peripheral.interrupt import GenericInterruptController
 from systemonachip.peripheral.serial import AsyncSerial
@@ -19,12 +20,14 @@ class Basic(CPUSoC, Elaboratable):
     def __init__(self, *, clock_frequency, rom_size, ram_size):
         self._arbiter = wishbone.Arbiter(addr_width=30, data_width=32, granularity=8,
                                          features={"cti", "bte"})
-        self._decoder = wishbone.Decoder(addr_width=30, data_width=32, granularity=8,
-                                         features={"cti", "bte"}) # Every 0x10000000
+
+        self._decoder = Decoder(0x10000000) # Every 0x10000000
         """Memory decoder that splits the 32-bit address space into 16 0x10000000 byte chunks. Each
            chunk can be passed into a sub-bus or peripheral."""
 
-        self.cpu = MinervaCPU(reset_address=0x00000000, instruction_bus=self._arbiter, data_bus=self._arbiter)
+        self.cpu = MinervaCPU(reset_address=0x00000000,
+                              instruction_bus=self._arbiter,
+                              data_bus=self._arbiter)
         """Central processing unit."""
 
         self.rom = RandomAccessMemory(self._decoder[0x0], size=rom_size, writable=False)

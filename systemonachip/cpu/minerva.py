@@ -15,7 +15,7 @@ class MinervaCPU(CPU, Elaboratable):
     byteorder  = "little"
     data_width = 32
 
-    def __init__(self, **kwargs):
+    def __init__(self, instruction_bus, data_bus, **kwargs):
         super().__init__()
         self._cpu = Minerva(**kwargs)
         self.ibus = wishbone.Interface(addr_width=30, data_width=32, granularity=8,
