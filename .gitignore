@@ -21,3 +21,4 @@ examples/build
 /_build
 /apidoc
 
+/dist

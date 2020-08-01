@@ -212,6 +212,10 @@ class Peripheral:
         for event in self._events:
             yield event
 
+    def elaborate(self, platform):
+        print("peripheral elaborate")
+        return Module()
+
 
 class CSRBank:
     """CSR register bank.

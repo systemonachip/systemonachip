@@ -13,8 +13,13 @@ class DecoderWindow:
 class Decoder(wishbone.Decoder):
 	"""A decoder splits the incoming address space into evenly spaced chunks of
 	   the given window_size. Each chunk is accessible by index."""
-	def __init__(self, window_size, memory_window=None):
-		super().__init__(addr_width=30, data_width=32)
+	def __init__(self, window_size, memory_window=None, *, cycle_type=True, burst_type=True):
+		features = []
+		if cycle_type:
+			features.append("cti")
+		if burst_type:
+			features.append("bte")
+		super().__init__(addr_width=30, data_width=32, features=features)
 		self.memory_window_bits = 32
 		self.start_address = 0
 		self.bin_size = window_size

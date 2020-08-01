@@ -20,7 +20,7 @@ class Timer(Peripheral, Elaboratable):
     creation_id = StaticHalfWord(0x2, 0x0000)
     """Creation id: 0x0000"""
 
-    reload_ = Word(0x4)
+    reload_ = VariableWidth(0x4)
     """Reload value of counter. When `ctr` reaches 0, it is automatically reloaded with this value.
        If the written value is larger than the timer width, only the bits within the timer's range
        will be kept."""
@@ -28,11 +28,23 @@ class Timer(Peripheral, Elaboratable):
     enable = Bit(0x8, 0x0)
     """Counter enable."""
     
-    value = Word(0xb)
+    value = VariableWidth(0xc)
     """Counter value."""
 
-    zero = Event(mode="rise")
-    """Counter value reached 0."""
+    interrupt_enable = AggregateEventEnable(0x10)
+    """Enables interrupt generation out of the peripheral."""
+
+    interrupt_status = AggregateEventStatus(0x14)
+    """Aggregate event status, write 0 to any bit to turn the interrupt off."""
+
+    config_width = Config(0x18, "_width")
+    """Configured width of the timer. Read-only"""
+
+    zero = Event(0x0, mode="rise")
+    """Counter value reached 0. Event bit 0."""
+
+    aggregate_event = AggregateEvent()
+    """High signal when any individual event is active and enabled."""
 
     def __init__(self, memory_window, width):
         """Parameters
@@ -55,7 +67,7 @@ class Timer(Peripheral, Elaboratable):
         if width > 32:
             raise ValueError("Counter width cannot be greater than 32 (was: {})"
                              .format(width))
-        self.width   = width
+        self._width   = width
 
         # bank          = self.csr_bank()
         # self._reload  = bank.csr(width, "rw")
@@ -64,13 +76,13 @@ class Timer(Peripheral, Elaboratable):
 
         # self._zero_ev = self.event(mode="rise")
 
-        self._bridge  = self.bridge(data_width=32, granularity=8, alignment=2)
-        self.bus      = self._bridge.bus
+        # self._bridge  = self.bridge(data_width=32, granularity=8, alignment=2)
+        # self.bus      = self._bridge.bus
         #self.irq      = self._bridge.irq
 
     def elaborate(self, platform):
         m = Module()
-        m.submodules.bridge = self._bridge
+        m.submodules.peripheral = super().elaborate(platform)
 
         with m.If(self.enable.r_data):
             with m.If(self.counter.r_data == 0):

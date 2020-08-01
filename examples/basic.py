@@ -16,7 +16,7 @@ from systemonachip.soc.cpu import CPUSoC
 __all__ = ["Basic"]
 
 
-class Basic(CPUSoC, Elaboratable):
+class Basic(Elaboratable):
     def __init__(self, *, clock_frequency, rom_size, ram_size):
         self._arbiter = wishbone.Arbiter(addr_width=30, data_width=32, granularity=8,
                                          features={"cti", "bte"})
@@ -58,9 +58,10 @@ class Basic(CPUSoC, Elaboratable):
             if isinstance(attr, Elaboratable):
                 setattr(m.submodules, name, attr)
 
+        # print(self._decoder.bus)
         m.d.comb += [
             self._arbiter.bus.connect(self._decoder.bus),
-            self.cpu.ip.eq(self.intc.ip),
+            # self.cpu.ip.eq(self.intc.ip),
         ]
 
         return m
@@ -90,5 +91,4 @@ if __name__ == "__main__":
 
     soc = Basic(clock_frequency=int(platform.default_clk_frequency), rom_size=0x4000,ram_size=0x1000)
 
-    soc.build(do_build=True, do_init=True)
     platform.build(soc, do_program=True)
