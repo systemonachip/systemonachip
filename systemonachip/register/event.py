@@ -1,9 +1,11 @@
 """Event related registers"""
 
-class AggregateEventEnable:
+from .base import AutoRegister
+
+class AggregateEventEnable(AutoRegister):
 	def __init__(self, address):
 		pass
 
-class AggregateEventStatus:
+class AggregateEventStatus(AutoRegister):
 	def __init__(self, address):
 		pass

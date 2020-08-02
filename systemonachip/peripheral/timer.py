@@ -31,10 +31,10 @@ class Timer(Peripheral, Elaboratable):
     value = VariableWidth(0xc)
     """Counter value."""
 
-    interrupt_enable = AggregateEventEnable(0x10)
+    event_enable = AggregateEventEnable(0x10)
     """Enables interrupt generation out of the peripheral."""
 
-    interrupt_status = AggregateEventStatus(0x14)
+    event_status = AggregateEventStatus(0x14)
     """Aggregate event status, write 0 to any bit to turn the interrupt off."""
 
     config_width = Config(0x18, "_width")
@@ -82,20 +82,20 @@ class Timer(Peripheral, Elaboratable):
 
     def elaborate(self, platform):
         m = Module()
-        m.submodules.peripheral = super().elaborate(platform)
 
         with m.If(self.enable.r_data):
-            with m.If(self.counter.r_data == 0):
-                m.d.comb += self.zero.stb.eq(1)
+            with m.If(self.value.r_data == 0):
+                m.d.comb += self.zero.eq(1)
                 m.d.sync += self.value.r_data.eq(self.reload_.r_data)
             with m.Else():
                 m.d.sync += self.value.r_data.eq(self.value.r_data - 1)
 
         with m.If(self.reload_.w_stb):
             m.d.sync += self.reload_.r_data.eq(self.reload_.w_data)
-        with m.If(self._en.w_stb):
+        with m.If(self.enable.w_stb):
             m.d.sync += self.enable.r_data.eq(self.enable.w_data)
         with m.If(self.value.w_stb):
             m.d.sync += self.value.r_data.eq(self.value.w_data)
 
+        m.submodules.peripheral = super().elaborate(platform)
         return m
