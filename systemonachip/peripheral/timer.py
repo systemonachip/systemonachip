@@ -37,16 +37,16 @@ class Timer(Peripheral, Elaboratable):
     event_status = AggregateEventStatus(0x14)
     """Aggregate event status, write 0 to any bit to turn the interrupt off."""
 
-    config_width = Config(0x18, "_width")
+    width = Config(0x18, "_width")
     """Configured width of the timer. Read-only"""
 
-    zero = Event(0x0, mode="rise")
+    zero = Event(0x14, 0x0, mode="rise")
     """Counter value reached 0. Event bit 0."""
 
     aggregate_event = AggregateEvent()
     """High signal when any individual event is active and enabled."""
 
-    def __init__(self, memory_window, width):
+    def __init__(self, memory_window, *, width=None):
         """Parameters
         ----------
         width : int
@@ -59,15 +59,16 @@ class Timer(Peripheral, Elaboratable):
         irq : :class:`IRQLine`
             Interrupt request.
         """
-        super().__init__()
+        super().__init__(memory_window)
 
-        if not isinstance(width, int) or width < 0:
-            raise ValueError("Counter width must be a non-negative integer, not {!r}"
-                             .format(width))
-        if width > 32:
-            raise ValueError("Counter width cannot be greater than 32 (was: {})"
-                             .format(width))
-        self._width   = width
+        if isinstance(memory_window, Record):
+            if not isinstance(width, int) or width < 0:
+                raise ValueError("Counter width must be a non-negative integer, not {!r}"
+                                 .format(width))
+            if width > 32:
+                raise ValueError("Counter width cannot be greater than 32 (was: {})"
+                                 .format(width))
+            self._width   = width
 
         # bank          = self.csr_bank()
         # self._reload  = bank.csr(width, "rw")
@@ -99,3 +100,38 @@ class Timer(Peripheral, Elaboratable):
 
         m.submodules.peripheral = super().elaborate(platform)
         return m
+
+if __name__ == "__main__":
+    from nmigen.back.pysim import Simulator
+    bus = csr.Interface(addr_width=14,
+                        data_width=32,
+                        name="csr")
+    t = Timer(bus, width=2)
+
+    class SimulatorBus:
+        def __init__(self, sim, bus):
+            self._sim = sim
+            self._bus = bus
+
+        def actions(self):
+            while True:
+                yield
+
+        def __getitem__(self, index):
+            print("get", index)
+
+    sim = Simulator(t)
+    sbus = SimulatorBus(sim, bus)
+    sim.add_clock(1e-6)
+    sim.add_sync_process(sbus.actions)
+
+    timer0 = Timer(sbus)
+    with sim.write_vcd("timer.vcd"):
+        print(timer0.width) # Should be 2
+        print(timer0.enable) # Should be False
+        timer0.enable = True
+        print(timer0.value)
+        # wait 5 cycles
+        print(timer0.zero)
+        print(timer0.value)
+

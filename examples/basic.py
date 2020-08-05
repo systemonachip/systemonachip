@@ -3,6 +3,7 @@ import importlib
 
 from nmigen import *
 from nmigen_soc import wishbone
+from nmigen.back import verilog
 
 from systemonachip.bus.decoder import Decoder
 from systemonachip.cpu.minerva import MinervaCPU
@@ -90,5 +91,6 @@ if __name__ == "__main__":
     #uart_pins = platform.request("uart", 0)
 
     soc = Basic(clock_frequency=int(platform.default_clk_frequency), rom_size=0x4000,ram_size=0x1000)
-
-    platform.build(soc, do_program=True)
+    with open("basic_soc.v", "w") as f:
+        f.write(verilog.convert(soc))
+    platform.build(soc)

@@ -1,3 +1,4 @@
+from nmigen import Record
 from nmigen_soc import csr
 
 from .base import Register
@@ -12,6 +13,9 @@ class Bit(Register):
         self._position = position
 
     def __get__(self, obj, type=None):
+        if not isinstance(obj._memory_window, Record):
+            return (obj._memory_window[self._address + self._position // 8] & (1 << (self._position % 8))) != 0
+
         key = (self._address, self._position)
         if not hasattr(obj, "_csr"):
             obj._csr = {}

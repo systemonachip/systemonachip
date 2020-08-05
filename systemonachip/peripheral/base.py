@@ -16,9 +16,8 @@ __all__ = ["Peripheral"]
 class Peripheral:
     """
     """
-    def __init__(self):
-        pass
-
+    def __init__(self, memory_window):
+        self._memory_window = memory_window
 
     # def window(self, *, addr_width, data_width, granularity=None, features=frozenset(),
     #            alignment=0, addr=None, sparse=None):
@@ -40,16 +39,14 @@ class Peripheral:
 
     def elaborate(self, platform):
         m = Module()
-        if hasattr(self, "_csr"):
-            print("csrs")
-            for key in self._csr:
-                print(key, self._csr[key])
-            print()
+
+
         if hasattr(self, "_events"):
             print("events")
             for key in self._events:
                 print(key, self._events[key])
             print()
+
         for name in dir(self):
             class_ = self.__class__
             if hasattr(class_, name):
@@ -58,6 +55,21 @@ class Peripheral:
                     print(name, v)
                 if isinstance(v, Event):
                     print("event", name, v)
+
+        if hasattr(self, "_csr"):
+            csr_mux = csr.Multiplexer(addr_width=1, data_width=8, alignment=1)
+
+            print("csrs")
+            for key in self._csr:
+                addr, bit = key
+                csr_mux.add(self._csr[key], addr=addr, alignment=1, extend=True)
+                print(key, self._csr[key])
+            print()
+
+            m.submodules["csr_multiplexer"] = csr_mux
+            # TODO: Only create this bridge if we were passed in a wishbone bus.
+            m.submodules["wishbone_to_csr_bridge"] = WishboneCSRBridge(csr_mux.bus, data_width=8)
+
         return m
 
 

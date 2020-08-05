@@ -1,6 +1,8 @@
 """Dynamically sized registers"""
 from nmigen_soc import csr
 
+from nmigen import Record
+
 class VariableWidth:
     def __init__(self, address, *, variable="_width"):
         """Variable width register that depends on instance state in the given `variable`. `variable`
@@ -14,12 +16,15 @@ class VariableWidth:
     def __get__(self, obj, type=None):
         if obj == None:
             return self
-        key = (self._address, None)
-        if not hasattr(obj, "_csr"):
-            obj._csr = {}
-        elif key in obj._csr:
-            return obj._csr[key]
 
-        elem = csr.Element(getattr(obj, self._width_variable), "rw", name=self._name)
-        obj._csr[key] = elem
-        return elem
+        if isinstance(obj._memory_window, Record):
+            key = (self._address, None)
+            if not hasattr(obj, "_csr"):
+                obj._csr = {}
+            elif key in obj._csr:
+                return obj._csr[key]
+
+            elem = csr.Element(getattr(obj, self._width_variable), "rw", name=self._name)
+            obj._csr[key] = elem
+            return elem
+        return obj._memory_window[self._address]
