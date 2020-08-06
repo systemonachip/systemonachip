@@ -103,22 +103,60 @@ class Timer(Peripheral, Elaboratable):
 
 if __name__ == "__main__":
     from nmigen.back.pysim import Simulator
+    from nmigen.back import verilog
     bus = csr.Interface(addr_width=14,
                         data_width=32,
                         name="csr")
-    t = Timer(bus, width=2)
+    t = Timer(bus, width=4)
 
     class SimulatorBus:
         def __init__(self, sim, bus):
             self._sim = sim
             self._bus = bus
+            self._read_address = None
+            self._read_data = None
+            self._write_address = None
+            self._write_data = None
 
         def actions(self):
             while True:
-                yield
+                if self._read_address is not None:
+                    yield self._bus.addr.eq(self._read_address)
+                    yield self._bus.r_stb.eq(1)
+                    yield
+                    yield self._bus.r_stb.eq(0)
+                    yield
+                    self._read_data = yield bus.r_data
+                    self._read_address = None
+                elif self._write_address is not None and self._write_data is not None:
+                    yield bus.addr.eq(self._write_address)
+                    yield bus.w_data.eq(self._write_data)
+                    yield bus.w_stb.eq(1)
+                    yield
+                    yield bus.w_stb.eq(0)
+                    yield
+                    yield
+                    self._write_address = None
+                    self._write_data = None
+                else:
+                    yield
 
         def __getitem__(self, index):
-            print("get", index)
+            #print("get", index, sim, bus)
+            self._read_address = index
+            while self._read_data is None:
+                self._sim.advance()
+            data = self._read_data
+            print("got data", data)
+            self._read_data = None
+            return data
+
+        def __setitem__(self, index, value):
+            print("set", index, sim, bus)
+            self._write_address = index
+            self._write_data = value
+            while self._write_data is not None:
+                self._sim.advance()
 
     sim = Simulator(t)
     sbus = SimulatorBus(sim, bus)
@@ -128,10 +166,17 @@ if __name__ == "__main__":
     timer0 = Timer(sbus)
     with sim.write_vcd("timer.vcd"):
         print(timer0.width) # Should be 2
+        timer0.reload_ = 0xf
+        timer0.value = 0xe
         print(timer0.enable) # Should be False
         timer0.enable = True
+        for _ in range(50):
+            sim.advance()
+        print(timer0.enable)
         print(timer0.value)
         # wait 5 cycles
         print(timer0.zero)
         print(timer0.value)
 
+    with open("timer.v", "w") as f:
+        f.write(verilog.convert(t))

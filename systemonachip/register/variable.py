@@ -28,3 +28,10 @@ class VariableWidth:
             obj._csr[key] = elem
             return elem
         return obj._memory_window[self._address]
+
+    def __set__(self, obj, value):
+        if not isinstance(obj._memory_window, Record):
+            obj._memory_window[self._address] = value
+            return
+
+        raise RuntimeError("Cannot set value when elaborating")

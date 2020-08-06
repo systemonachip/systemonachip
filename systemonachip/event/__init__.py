@@ -23,7 +23,7 @@ class Event:
             event  = Signal(name="{}_stb".format(self._name))
             obj._events[key] = event
             return event
-        return (obj._memory_window[address] & (1 << self._bit)) != 0
+        return (obj._memory_window[self._address] & (1 << self._bit)) != 0
 
 class AggregateEvent:
     pass

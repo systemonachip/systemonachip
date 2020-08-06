@@ -22,6 +22,15 @@ class Bit(Register):
         elif key in obj._csr:
             return obj._csr[key]
 
+        print("create bit", self._name)
         elem = csr.Element(1, "rw", name=self._name)
         obj._csr[key] = elem
         return elem
+
+
+    def __set__(self, obj, type=None):
+        if not isinstance(obj._memory_window, Record):
+            obj._memory_window[self._address + self._position // 8] |= (1 << (self._position % 8))
+            return
+
+        raise RuntimeError("Cannot set value when elaborating")

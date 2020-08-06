@@ -18,6 +18,8 @@ class Peripheral:
     """
     def __init__(self, memory_window):
         self._memory_window = memory_window
+        if isinstance(self._memory_window, Record):
+            self._bus = self._memory_window
 
     # def window(self, *, addr_width, data_width, granularity=None, features=frozenset(),
     #            alignment=0, addr=None, sparse=None):
@@ -68,7 +70,13 @@ class Peripheral:
 
             m.submodules["csr_multiplexer"] = csr_mux
             # TODO: Only create this bridge if we were passed in a wishbone bus.
-            m.submodules["wishbone_to_csr_bridge"] = WishboneCSRBridge(csr_mux.bus, data_width=8)
+            # m.submodules["wishbone_to_csr_bridge"] = WishboneCSRBridge(csr_mux.bus, data_width=8)
+
+        # Connect the input bus directly to the csr_mux
+        m.d.comb += csr_mux.bus.w_data.eq(self._bus.w_data)
+        m.d.comb += csr_mux.bus.addr.eq(self._bus.addr)
+        m.d.comb += csr_mux.bus.r_stb.eq(self._bus.r_stb)
+        m.d.comb += csr_mux.bus.w_stb.eq(self._bus.w_stb)
 
         return m
 
