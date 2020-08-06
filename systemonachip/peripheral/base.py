@@ -42,7 +42,6 @@ class Peripheral:
     def elaborate(self, platform):
         m = Module()
 
-
         if hasattr(self, "_events"):
             print("events")
             for key in self._events:
@@ -59,12 +58,12 @@ class Peripheral:
                     print("event", name, v)
 
         if hasattr(self, "_csr"):
-            csr_mux = csr.Multiplexer(addr_width=1, data_width=8, alignment=1)
+            csr_mux = csr.Multiplexer(addr_width=8, data_width=8, alignment=0)
 
             print("csrs")
             for key in self._csr:
                 addr, bit = key
-                csr_mux.add(self._csr[key], addr=addr, alignment=1, extend=True)
+                csr_mux.add(self._csr[key], addr=addr, alignment=0, extend=False)
                 print(key, self._csr[key])
             print()
 

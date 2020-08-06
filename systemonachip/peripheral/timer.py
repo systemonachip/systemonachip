@@ -105,7 +105,7 @@ if __name__ == "__main__":
     from nmigen.back.pysim import Simulator
     from nmigen.back import verilog
     bus = csr.Interface(addr_width=14,
-                        data_width=32,
+                        data_width=8,
                         name="csr")
     t = Timer(bus, width=4)
 
@@ -125,8 +125,17 @@ if __name__ == "__main__":
                     yield self._bus.r_stb.eq(1)
                     yield
                     yield self._bus.r_stb.eq(0)
+                    x = yield self._bus.r_data
+                    print(x)
                     yield
-                    self._read_data = yield bus.r_data
+                    #print(yield self._bus.r_data)
+                    # x = yield self._bus.r_data
+                    # print("data read", x)
+                    # yield
+
+                    # x = yield self._bus.r_data
+                    # print(x)
+                    self._read_data = x
                     self._read_address = None
                 elif self._write_address is not None and self._write_data is not None:
                     yield bus.addr.eq(self._write_address)
