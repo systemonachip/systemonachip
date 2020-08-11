@@ -62,6 +62,8 @@ class Timer(Peripheral, Elaboratable):
         super().__init__(memory_window)
 
         if isinstance(memory_window, Record):
+            if not isinstance(memory_window, csr.Interface):
+                raise ValueError("Timer must connect to csr.Interface")
             if not isinstance(width, int) or width < 0:
                 raise ValueError("Counter width must be a non-negative integer, not {!r}"
                                  .format(width))

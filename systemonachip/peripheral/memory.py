@@ -29,7 +29,7 @@ class RandomAccessMemory(Elaboratable):
         Wishbone bus interface.
     """
     # TODO raise bus.err if read-only and a bus write is attempted.
-    def __init__(self, address_window, *, size, name=None, src_loc_at=1, data_width=32, granularity=8, writable=True):
+    def __init__(self, memory_window, *, size, name=None, src_loc_at=1, data_width=32, granularity=8, writable=True):
         super().__init__()
         if name is not None and not isinstance(name, str):
             raise TypeError("Name must be a string, not {!r}".format(name))
@@ -46,14 +46,11 @@ class RandomAccessMemory(Elaboratable):
         self._mem  = Memory(depth=(size * granularity) // data_width, width=data_width,
                             name=self.name)
 
-        self.bus = wishbone.Interface(addr_width=log2_int(self._mem.depth),
-                                      data_width=self._mem.width, granularity=granularity,
-                                      features={"cti", "bte"})
-
-        memory_map = MemoryMap(addr_width=log2_int(size), data_width=granularity)
-        memory_map.add_resource(self._mem, size=size)
-        self.bus.memory_map = memory_map
-        address_window.add(self.bus)
+        if isinstance(memory_window, wishbone.Interface):
+            if not hasattr(memory_window, "bte"):
+                raise ValueError("Incoming wishbone.Interface must support burst")
+            self.bus = memory_window
+            self.bus.memory_map.add_resource(self._mem, size=size)
 
         self.size        = size
         self.granularity = granularity

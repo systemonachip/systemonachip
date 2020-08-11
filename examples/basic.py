@@ -6,6 +6,7 @@ from nmigen_soc import wishbone
 from nmigen.back import verilog
 
 from systemonachip.bus.decoder import Decoder
+from systemonachip.bus.bridge import WishboneCSRBridge
 from systemonachip.cpu.minerva import MinervaCPU
 from systemonachip.peripheral.interrupt import GenericInterruptController
 from systemonachip.peripheral.serial import AsyncSerial
@@ -19,10 +20,14 @@ __all__ = ["Basic"]
 
 class Basic(Elaboratable):
     def __init__(self, *, clock_frequency, rom_size, ram_size):
+
         self._arbiter = wishbone.Arbiter(addr_width=30, data_width=32, granularity=8,
                                          features={"cti", "bte"})
 
-        self._decoder = Decoder(0x10000000) # Every 0x10000000
+        self.bus = wishbone.Interface(addr_width=30, data_width=32, granularity=8,
+                                      features={"cti", "bte"})
+
+        self._decoder = Decoder(self.bus, 0x10000000) # Every 0x10000000
         """Memory decoder that splits the 32-bit address space into 16 0x10000000 byte chunks. Each
            chunk can be passed into a sub-bus or peripheral."""
 
@@ -40,7 +45,8 @@ class Basic(Elaboratable):
         # self.uart = AsyncSerial(self._decoder[0x3], divisor=uart_divisor, pins=uart_pins)
         """Simple async serial. At 0x30000000."""
 
-        self.timer = Timer(self._decoder[0x4], width=32)
+        self.timer_bus = WishboneCSRBridge(self._decoder[0x4])
+        self.timer = Timer(self.timer_bus.csr_bus, width=32)
         """Simple 32-bit timer. At 0x40000000."""
 
         # self.intc = GenericInterruptController(width=len(self.cpu.ip))

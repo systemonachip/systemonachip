@@ -1,11 +1,17 @@
-# A framework for building SoCs with nMigen
+# Another framework for building SoCs with nMigen
 
-**LambdaSoC is a work in progress. Please keep in mind that some interfaces will undergo breaking changes as they evolve and/or get moved [upstream][nmigen-soc].**
+`systemonachip` is a set of Python primitives helpful when connecting system-on-a-chip components in an FPGA. It is based on [lambdasoc](https://github.com/lambdaconcept/lambdasoc), [nmigen-soc][nmigen-soc] and [nmigen](https://github.com/nmigen/nmigen/).
+
+It does three things differently to make it easier for hardware beginners and possible to reuse as drivers:
+
+1. This library uses full names for things rather than acronyms so that it's possible to understand what something is. Acronyms may be used after the full name has been used.
+2. Peripherals take input busses and signals as constructor arguments to make it possible to switch from hardware generation to using the class as a driver.
+3. Data descriptors are used to define registers. This makes them easy to document and the underlying code easy to reuse.
 
 ## Installation
 
 ```
-git clone https://github.com/lambdaconcept/lambdasoc
+git clone https://github.com/tannewt/systemonachip
 cd lambdasoc
 git submodule update --init --recursive
 
@@ -16,30 +22,6 @@ python setup.py install
 ## Quick start
 
 Let's build and run the SoC example at [examples/sram_soc.py][sram_soc]. It is composed of a [Minerva][minerva] CPU, SRAM storage, an UART and a timer.
-
-##### Requirements
-* A `riscv64-unknown-elf` GNU toolchain, to build the first-stage bootloader
-* A [supported platform][nmigen-boards] with enough resources to fit the SoC
-
-Here, we build the SoC for the `nmigen_boards.arty_a7.ArtyA7Platform`:
-```
-python examples/sram_soc.py --baudrate=9600 nmigen_boards.arty_a7.ArtyA7Platform
-```
-
-The bootloader shell can be accessed from the serial port:
-```
-flterm --speed=9600 /dev/ttyUSB1
-
-LambdaSoC BIOS
-(c) Copyright 2007-2020 M-Labs Limited
-(c) Copyright 2020 LambdaConcept
-Built Mar 26 2020 13:41:04
-
-BIOS CRC passed (c402e7e2)
-BIOS>
-```
-
-The `help` command lists available commands.
 
 ## License
 
