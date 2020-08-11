@@ -125,17 +125,8 @@ if __name__ == "__main__":
                     yield self._bus.r_stb.eq(1)
                     yield
                     yield self._bus.r_stb.eq(0)
-                    x = yield self._bus.r_data
-                    print(x)
                     yield
-                    #print(yield self._bus.r_data)
-                    # x = yield self._bus.r_data
-                    # print("data read", x)
-                    # yield
-
-                    # x = yield self._bus.r_data
-                    # print(x)
-                    self._read_data = x
+                    self._read_data = yield self._bus.r_data
                     self._read_address = None
                 elif self._write_address is not None and self._write_data is not None:
                     yield bus.addr.eq(self._write_address)
@@ -156,7 +147,6 @@ if __name__ == "__main__":
             while self._read_data is None:
                 self._sim.advance()
             data = self._read_data
-            print("got data", data)
             self._read_data = None
             return data
 

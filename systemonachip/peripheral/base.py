@@ -59,6 +59,7 @@ class Peripheral:
 
         if hasattr(self, "_csr"):
             csr_mux = csr.Multiplexer(addr_width=8, data_width=8, alignment=0)
+            csr_mux._bus = self._bus
 
             print("csrs")
             for key in self._csr:
@@ -70,12 +71,6 @@ class Peripheral:
             m.submodules["csr_multiplexer"] = csr_mux
             # TODO: Only create this bridge if we were passed in a wishbone bus.
             # m.submodules["wishbone_to_csr_bridge"] = WishboneCSRBridge(csr_mux.bus, data_width=8)
-
-        # Connect the input bus directly to the csr_mux
-        m.d.comb += csr_mux.bus.w_data.eq(self._bus.w_data)
-        m.d.comb += csr_mux.bus.addr.eq(self._bus.addr)
-        m.d.comb += csr_mux.bus.r_stb.eq(self._bus.r_stb)
-        m.d.comb += csr_mux.bus.w_stb.eq(self._bus.w_stb)
 
         return m
 
